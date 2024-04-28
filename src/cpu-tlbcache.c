@@ -36,16 +36,26 @@ int tlb_cache_read(struct memphy_struct * mp, int pid, int pgnum, BYTE value)
     *      cache line by employing:
     *      direct mapped, associated mapping etc.
     */
-    // Lặp qua tất cả các mục trong cache TLB
-    for (int i = 0; i < TLB_CACHE_SIZE; i++) {
-        // Nếu tìm thấy một mục có cùng pid và pgnum
-        if (tlb_cache[i].pid == pid && tlb_cache[i].pgnum == pgnum) {
-            // Đọc giá trị từ cache TLB
-            *value = tlb_cache[i].value;
-            return 0; // Đọc thành công
-        }
+    if (mp == NULL || pgnum < 0 || pgnum >= mp->maxsz)
+        return -1; // Tham số không hợp lệ hoặc mp không tồn tại
+
+    int addr = pgnum * PAGE_SIZE; // Tính địa chỉ bắt đầu của trang
+
+    // Kiểm tra xem trang đã được cache chưa
+    if (mp->tlb_cache_pid == pid && mp->tlb_cache_pgnum == pgnum) {
+        *value = mp->tlb_cache_value; // Trả về giá trị từ TLB cache
+        return 0; // Đọc thành công từ TLB cache
     }
-    return -1; // Không tìm thấy mục trong cache TLB
+
+    // Nếu trang chưa được cache, đọc từ bộ nhớ vật lý
+    TLBMEMPHY_read(mp, addr, value);
+
+    // Cập nhật TLB cache
+    mp->tlb_cache_pid = pid;
+    mp->tlb_cache_pgnum = pgnum;
+    mp->tlb_cache_value = *value;
+
+    return 0; // Đọc thành công từ bộ nhớ vật lý
 }
 
 /*
@@ -61,18 +71,20 @@ int tlb_cache_write(struct memphy_struct *mp, int pid, int pgnum, BYTE value)
     *      cache line by employing:
     *      direct mapped, associated mapping etc.
     */
-    // Lặp qua tất cả các mục trong cache TLB
-    for (int i = 0; i < TLB_CACHE_SIZE; i++) {
-        // Nếu tìm thấy một mục trống trong cache TLB
-        if (tlb_cache[i].pid == -1) {
-            // Ghi giá trị vào cache TLB
-            tlb_cache[i].pid = pid;
-            tlb_cache[i].pgnum = pgnum;
-            tlb_cache[i].value = value;
-            return 0; // Ghi thành công
-        }
-    }
-    return -1; // Cache TLB đầy, không thể ghi mới vào
+     if (mp == NULL || pgnum < 0 || pgnum >= mp->maxsz)
+        return -1; // Tham số không hợp lệ hoặc mp không tồn tại
+
+    int addr = pgnum * PAGE_SIZE; // Tính địa chỉ bắt đầu của trang
+
+    // Ghi giá trị vào bộ nhớ vật lý
+    TLBMEMPHY_write(mp, addr, value);
+
+    // Cập nhật TLB cache
+    mp->tlb_cache_pid = pid;
+    mp->tlb_cache_pgnum = pgnum;
+    mp->tlb_cache_value = value;
+
+    return 0; // Ghi thành công vào bộ nhớ vật lý
 }
 
 /*
