@@ -43,11 +43,33 @@ void init_scheduler(void) {
  *  State representation   prio = 0 .. MAX_PRIO, curr_slot = 0..(MAX_PRIO - prio)
  */
 struct pcb_t * get_mlq_proc(void) {
+	pthread_mutex_lock(&queue_lock);
+	
 	struct pcb_t * proc = NULL;
 	/*TODO: get a process from PRIORITY [ready_queue].
 	 * Remember to use lock to protect the queue.
 	 */
-	proc = dequeue(&mlq_ready_queue[0]);
+	unsigned long curr_prio = 0, max_prio = MAX_PRIO;
+	while (curr_prio < max_prio)
+	{
+		if (!empty(&mlq_ready_queue[curr_prio]) && mlq_ready_queue[curr_prio].slot_cpu_can_use > 0)
+		{
+			
+			proc = dequeue(&mlq_ready_queue[curr_prio]);
+			if (proc != NULL)
+			{
+				mlq_ready_queue[curr_prio].slot_cpu_can_use--;	//decrease slot_cpu_can_use
+			}
+			
+			break;
+		}
+		else
+		{
+			curr_prio++;
+		}
+	}
+	//proc = dequeue(&mlq_ready_queue[0]);
+	pthread_mutex_unlock(&queue_lock);
 	return proc;	
 }
 
@@ -76,10 +98,20 @@ void add_proc(struct pcb_t * proc) {
 }
 #else
 struct pcb_t * get_proc(void) {
+	pthread_mutex_lock(&queue_lock);
+	
 	struct pcb_t * proc = NULL;
 	/*TODO: get a process from [ready_queue].
 	 * Remember to use lock to protect the queue.
 	 * */
+	if (!empty(&ready_queue))
+	{
+		
+		proc = dequeue(&ready_queue);
+		
+	}
+
+	pthread_mutex_unlock(&queue_lock);
 	return proc;
 }
 

@@ -6,6 +6,8 @@
 
 #include "mm.h"
 #include <stdlib.h>
+#include <pthread.h>
+static pthread_mutex_t mem_lock;
 
 /*
  *  MEMPHY_mv_csr - move MEMPHY cursor
@@ -139,6 +141,7 @@ int MEMPHY_format(struct memphy_struct *mp, int pagesz)
 
 int MEMPHY_get_freefp(struct memphy_struct *mp, int *retfpn)
 {
+   pthread_mutex_lock(&mem_lock);
    struct framephy_struct *fp = mp->free_fp_list;
 
    if (fp == NULL)
@@ -151,21 +154,31 @@ int MEMPHY_get_freefp(struct memphy_struct *mp, int *retfpn)
     * No garbage collector acting then it not been released
     */
    free(fp);
+   pthread_mutex_unlock(&mem_lock);
 
    return 0;
 }
 
-int MEMPHY_dump(struct memphy_struct * mp)
-{
-    /*TODO dump memphy contnt mp->storage 
-     *     for tracing the memory content
-     */
-
+int MEMPHY_dump(struct memphy_struct *mp) {
+    char result[100];
+    strcpy(result,"Memory content-[pos,content]: ");
+    char temp[100];
+    if(mp&&mp->storage){
+        for(int i=0;i<mp->maxsz;i++){
+            if(mp->storage[i]!=(char)0){
+                sprintf(temp,"[%d,%d]", i, mp->storage[i]);
+                strcat(result,temp);
+            }
+        }
+        strcat(result,"\n\0");
+    }
+    printf("%s", result);
     return 0;
 }
 
 int MEMPHY_put_freefp(struct memphy_struct *mp, int fpn)
 {
+   pthread_mutex_lock(&mem_lock);
    struct framephy_struct *fp = mp->free_fp_list;
    struct framephy_struct *newnode = malloc(sizeof(struct framephy_struct));
 
@@ -174,6 +187,7 @@ int MEMPHY_put_freefp(struct memphy_struct *mp, int fpn)
    newnode->fp_next = fp;
    mp->free_fp_list = newnode;
 
+   pthread_mutex_unlock(&mem_lock);
    return 0;
 }
 
