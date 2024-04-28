@@ -45,7 +45,7 @@ struct vm_area_struct *get_vma_by_num(struct mm_struct *mm, int vmaid)
     return NULL;
 
   int vmait = 0;
-  
+
   while (vmait < vmaid)
   {
     if(pvma == NULL)
@@ -185,81 +185,49 @@ int pgfree_data(struct pcb_t *proc, uint32_t reg_index)
  */
 int pg_getpage(struct mm_struct *mm, int pgn, int *fpn, struct pcb_t *caller)
 {
-    uint32_t pte = mm->pgd[pgn];
-    
-    if (!PAGING_PAGE_PRESENT(pte))
-    { /* Page is not online, make it actively living */
-        int vicpgn, swpfpn;
-        int vicfpn;
-        uint32_t vicpte;
-        
-        int tgtfpn = PAGING_SWP(pte);//the target frame storing our variable
-        int tgtswp_type = PAGING_SWPTYP(pte);
-        
-        /* TODO: Play with your paging theory here */
-        /* Find victim page */
-        if (find_victim_page(caller->mm, &vicpgn)<0) return -1;
-        
-        
-        while(vicpgn == pgn)
-        {
-            if (find_victim_page(caller->mm, &vicpgn) < 0)
-                return -1;
-        }
-        
-        vicpte = caller ->mm->pgd[vicpgn];
-        vicfpn = PAGING_FPN(vicpte);
-        /* idx for mswp*/
-        int i = 0;
-        struct memphy_struct* mswp = (struct memphy_struct*)caller->mswp;
-        for (i = 0; i < PAGING_MAX_MMSWP; i++)
-        {
-            if (mswp + i == caller->active_mswp)
-                break;
-        }
-        /* Get free frame in MEMSWP */
-        if (MEMPHY_get_freefp(caller->active_mswp, &swpfpn) < 0)
-        {
-            struct memphy_struct** mswpit = caller-›mswp;
-            for (i = 0; i < PAGING_MAX_MMSWP; i++)
-            {
-                struct memphy_struct* tmp_swp = (struct memphy_struct*)(mswpit);
-                if (MEMPHY_get_freefp(tmp_swp+i,&swpfpn) == 0)
-                {
-                    /* Do swap frame from MEMRAM to MEMSWP and vice versa*/ /* Copy victim frame to new swap frame*/
-                    __swap_cp_page(caller->mram, vicfpn, tmp_swp+i, swpfpn);
-                    caller->active_mswp = tmp_swp+i;
-                    break;
-                }
-            }
-            
-        }
-        else
-        
-        __swap_cp_page(caller->mram,vicfpn,caller->active_mswp,swpfpn) ;
-        /* Copy target frame from swap to vicfpn in RAM */
-        __swap_cp_page(mswp + tgtswp_type, tgtfpn, caller->mram, vicfpn);
-        /*free frame in swap that includes gtfpn which have been copy to RAM*/
-        MEMPHY_put_freefp(mswp + tgtswp_type, tgtfpn);
-        /* Update page table, set swap for idx vicpgn */
-        pte_set_swap(&caller->mm->pgd[vicpgn],i, swpfpn);
-        /* Update its ontine Status of the target page */
-        //set online frame for idx pgn with the vicpn which has move to
-        pte_set_fpn(&caller->mm->pgd[pgn], vicfpn);
-        // keep tracking
-            
-        #ifdef CPU_TLB
-                    /* Update its online status of TLB (if needed) */
-        #endif
-                
-        enlist_pgn_node(&caller->mm->fifo_pgn,pgn);
-        pte = caller ->mm->pgd[pgn];
-    }
+  uint32_t pte = mm->pgd[pgn];
 
-    *fpn = PAGING_FPN(pte);
+  if (!PAGING_PAGE_PRESENT(pte))
+  { /* Page is not online, make it actively living */
+    int vicpgn, swpfpn; 
+    //int vicfpn;
+    //uint32_t vicpte;
 
-    return 0;
+    int tgtfpn = PAGING_SWP(pte);//the target frame storing our variable
+
+    /* TODO: Play with your paging theory here */
+    /* Find victim page */
+    find_victim_page(caller->mm, &vicpgn);
+
+    /* Get free frame in MEMSWP */
+    MEMPHY_get_freefp(caller->active_mswp, &swpfpn);
+
+
+    /* Do swap frame from MEMRAM to MEMSWP and vice versa*/
+    /* Copy victim frame to swap */
+    //__swap_cp_page();
+    /* Copy target frame from swap to mem */
+    //__swap_cp_page();
+
+    /* Update page table */
+    //pte_set_swap() &mm->pgd;
+
+    /* Update its online status of the target page */
+    //pte_set_fpn() & mm->pgd[pgn];
+    pte_set_fpn(&pte, tgtfpn);
+
+#ifdef CPU_TLB
+    /* Update its online status of TLB (if needed) */
+#endif
+
+    enlist_pgn_node(&caller->mm->fifo_pgn,pgn);
+  }
+
+  *fpn = PAGING_FPN(pte);
+
+  return 0;
 }
+
 /*pg_getval - read value at given offset
  *@mm: memory region
  *@addr: virtual address to acess 
@@ -364,7 +332,7 @@ int __write(struct pcb_t *caller, int vmaid, int rgid, int offset, BYTE value)
   struct vm_rg_struct *currg = get_symrg_byid(caller->mm, rgid);
 
   struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
-  
+
   if(currg == NULL || cur_vma == NULL) /* Invalid memory identify */
 	  return -1;
 
@@ -540,6 +508,7 @@ int find_victim_page(struct mm_struct *mm, int *retpgn)
  *@size: allocated size 
  *
  */
+// xem thử là trong cái area thứ id đó thì có cái free nào chứa được newarg không, nếu có về 0 nếu không về -1
 int get_free_vmrg_area(struct pcb_t *caller, int vmaid, int size, struct vm_rg_struct *newrg)
 {
   struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
