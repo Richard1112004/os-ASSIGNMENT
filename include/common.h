@@ -19,6 +19,7 @@
 #define SECOND_LV_LEN	5
 #define SEGMENT_LEN     FIRST_LV_LEN
 #define PAGE_LEN        SECOND_LV_LEN
+#define TLB_CACHE_SIZE 100
 
 #define NUM_PAGES	(1 << (ADDRESS_SIZE - OFFSET_LEN))
 #define PAGE_SIZE	(1 << OFFSET_LEN)
@@ -88,6 +89,16 @@ struct pcb_t {
 	uint32_t bp;	// Break pointer
 
 };
+struct tlb_cache {
+	int pid; // PID của tiến trình
+	// Các trường dữ liệu khác cần thiết cho TLB cache
+};
+struct tlb_cache_entry {
+	int pid;    // Process ID
+	int pgnum;  // Page number
+	BYTE value; // Value stored in TLB cache
+};
+extern struct tlb_cache_entry tlb_cache[TLB_CACHE_SIZE];
 
 #endif
 

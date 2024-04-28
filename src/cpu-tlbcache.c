@@ -29,13 +29,23 @@
  *  @pgnum: page number
  *  @value: obtained value
  */
+
 int tlb_cache_read(struct memphy_struct * mp, int pid, int pgnum, BYTE value)
 {
    /* TODO: the identify info is mapped to 
     *      cache line by employing:
     *      direct mapped, associated mapping etc.
     */
-   return 0;
+    // Lặp qua tất cả các mục trong cache TLB
+    for (int i = 0; i < TLB_CACHE_SIZE; i++) {
+        // Nếu tìm thấy một mục có cùng pid và pgnum
+        if (tlb_cache[i].pid == pid && tlb_cache[i].pgnum == pgnum) {
+            // Đọc giá trị từ cache TLB
+            *value = tlb_cache[i].value;
+            return 0; // Đọc thành công
+        }
+    }
+    return -1; // Không tìm thấy mục trong cache TLB
 }
 
 /*
@@ -51,7 +61,18 @@ int tlb_cache_write(struct memphy_struct *mp, int pid, int pgnum, BYTE value)
     *      cache line by employing:
     *      direct mapped, associated mapping etc.
     */
-   return 0;
+    // Lặp qua tất cả các mục trong cache TLB
+    for (int i = 0; i < TLB_CACHE_SIZE; i++) {
+        // Nếu tìm thấy một mục trống trong cache TLB
+        if (tlb_cache[i].pid == -1) {
+            // Ghi giá trị vào cache TLB
+            tlb_cache[i].pid = pid;
+            tlb_cache[i].pgnum = pgnum;
+            tlb_cache[i].value = value;
+            return 0; // Ghi thành công
+        }
+    }
+    return -1; // Cache TLB đầy, không thể ghi mới vào
 }
 
 /*
@@ -100,8 +121,17 @@ int TLBMEMPHY_dump(struct memphy_struct * mp)
    /*TODO dump memphy contnt mp->storage 
     *     for tracing the memory content
     */
+    if (mp == NULL) {
+        printf("Error: Invalid memory physical structure\n");
+        return -1;
+    }
 
-   return 0;
+    printf("memory physical content:\n");
+    for (int i = 0; i < mp->maxsz; i++) {
+        printf("%d: %d\n", i, mp->storage[i]);
+    }
+
+    return 0;
 }
 
 
