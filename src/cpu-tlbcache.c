@@ -19,6 +19,7 @@
 
 #include "mm.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 #define init_tlbcache(mp,sz,...) init_memphy(mp, sz, (1, ##__VA_ARGS__))
 
@@ -48,7 +49,7 @@ int tlb_cache_read(struct memphy_struct * mp, int pid, int pgnum, int* value)
     }
 
     // Nếu trang chưa được cache, đọc từ bộ nhớ vật lý
-    TLBMEMPHY_read(mp, addr, &value);
+    TLBMEMPHY_read(mp, addr, value);
 
     // Cập nhật TLB cache
     mp->tlb_cache_pid = pid;
