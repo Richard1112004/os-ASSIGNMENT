@@ -28,10 +28,15 @@ void init_scheduler(void) {
 	int i ;
 
 	for (i = 0; i < MAX_PRIO; i ++)
+	{
 		mlq_ready_queue[i].size = 0;
+		// init number of cpu each queue can use maximally
+		mlq_ready_queue[i].slot_cpu_can_use = MAX_PRIO - i;
+	}
 #endif
 	ready_queue.size = 0;
 	run_queue.size = 0;
+	run_queue.slot_cpu_can_use = MAX_PRIO;
 	pthread_mutex_init(&queue_lock, NULL);
 }
 
@@ -76,6 +81,7 @@ struct pcb_t * get_mlq_proc(void) {
 void put_mlq_proc(struct pcb_t * proc) {
 	pthread_mutex_lock(&queue_lock);
 	enqueue(&mlq_ready_queue[proc->prio], proc);
+	mlq_ready_queue[proc->prio].slot_cpu_can_use++;	//increase slot_cpu_can_use
 	pthread_mutex_unlock(&queue_lock);
 }
 
@@ -95,6 +101,13 @@ void put_proc(struct pcb_t * proc) {
 
 void add_proc(struct pcb_t * proc) {
 	return add_mlq_proc(proc);
+}
+void finish_proc(struct pcb_t **proc)
+{
+	pthread_mutex_lock(&queue_lock);
+	mlq_ready_queue[(*proc)->prio].slot_cpu_can_use++;	//increase slot_cpu_can_use
+	pthread_mutex_unlock(&queue_lock);
+	free(*proc);
 }
 #else
 struct pcb_t * get_proc(void) {
@@ -125,6 +138,10 @@ void add_proc(struct pcb_t * proc) {
 	pthread_mutex_lock(&queue_lock);
 	enqueue(&ready_queue, proc);
 	pthread_mutex_unlock(&queue_lock);	
+}
+void finish_proc(struct pcb_t **proc)
+{
+	free(*proc);
 }
 #endif
 
