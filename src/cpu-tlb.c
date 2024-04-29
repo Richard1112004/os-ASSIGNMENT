@@ -26,7 +26,7 @@ int tlb_change_all_page_tables_of(struct pcb_t *proc,  struct memphy_struct * mp
 
 int tlb_flush_tlb_of(struct pcb_t *proc, struct memphy_struct * mp)
 {
-  / Lặp qua tất cả các trang trong cache TLB
+  // Lặp qua tất cả các trang trong cache TLB
     for (int i = 0; i < mp->maxsz; i++) {
         // Đặt các giá trị của mỗi trang về trạng thái mặc định
         mp->storage[i] = -1; // Hoặc giá trị mặc định phù hợp với loại dữ liệu
