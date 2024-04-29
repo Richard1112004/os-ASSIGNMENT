@@ -112,7 +112,7 @@ int init_pte(uint32_t *pte,
              int swpoff); //swap offset
 int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr);
 int __free(struct pcb_t *caller, int vmaid, int rgid);
-int __read(struct pcb_t *caller, int vmaid, int rgid, int offset, BYTE *data);
+int __read(struct pcb_t *caller, int vmaid, int rgid, int offset, int *data);
 int __write(struct pcb_t *caller, int vmaid, int rgid, int offset, BYTE value);
 int init_mm(struct mm_struct *mm, struct pcb_t *caller);
 
@@ -124,11 +124,11 @@ int tlbfree_data(struct pcb_t *proc, uint32_t reg_index);
 int tlbread(struct pcb_t * proc, uint32_t source, uint32_t offset, uint32_t destination) ;
 int tlbwrite(struct pcb_t * proc, BYTE data, uint32_t destination, uint32_t offset);
 int init_tlbmemphy(struct memphy_struct *mp, int max_size);
-int TLBMEMPHY_read(struct memphy_struct * mp, int addr, BYTE *value);
-int TLBMEMPHY_write(struct memphy_struct * mp, int addr, BYTE data);
+int TLBMEMPHY_read(struct memphy_struct * mp, int addr, int *value);
+int TLBMEMPHY_write(struct memphy_struct * mp, int addr, int data);
 int TLBMEMPHY_dump(struct memphy_struct * mp);
-int tlb_cache_write(struct memphy_struct* mp, int pid, int pgnum, BYTE value);
-int tlb_cache_read(struct memphy_struct* mp, int pid, int pgnum, BYTE value);
+int tlb_cache_write(struct memphy_struct* mp, int pid, int pgnum, int value);
+int tlb_cache_read(struct memphy_struct* mp, int pid, int pgnum, int* value);
 /* VM prototypes */
 int pgalloc(struct pcb_t *proc, uint32_t size, uint32_t reg_index);
 int pgfree_data(struct pcb_t *proc, uint32_t reg_index);
