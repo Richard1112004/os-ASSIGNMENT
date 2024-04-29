@@ -104,8 +104,8 @@ int tlbread(struct pcb_t * proc, uint32_t source,
 #endif
   MEMPHY_dump(proc->mram);
 #endif
-
-  int val = __read(proc, 0, source, offset, (BYTE *)data);
+BYTE *byte_data = (BYTE *)&data;
+  int val = __read(proc, 0, source, offset, byte_data);
 
   destination = (uint32_t) data;
 
