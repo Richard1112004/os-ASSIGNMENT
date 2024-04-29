@@ -186,74 +186,43 @@ int pgfree_data(struct pcb_t *proc, uint32_t reg_index)
 int pg_getpage(struct mm_struct *mm, int pgn, int *fpn, struct pcb_t *caller)
 {
     uint32_t pte = mm->pgd[pgn];
-    
-    if (!PAGING_PAGE_PRESENT(pte))
-    { /* Page is not online, make it actively living */
+
+    if (!PAGING_PAGE_PRESENT(
+            pte)) { /* Page is not online, make it actively living */
         int vicpgn, swpfpn;
         int vicfpn;
         uint32_t vicpte;
-        
-        int tgtfpn = PAGING_SWP(pte);//the target frame storing our variable
-        int tgtswp_type = PAGING_SWPTYP(pte);
-        
+
+        int tgtfpn = PAGING_SWP(pte); // the target frame storing our variable
+
         /* TODO: Play with your paging theory here */
         /* Find victim page */
-        if (find_victim_page(caller->mm, &vicpgn)<0) return -1;
-        
-        
-        while(vicpgn == pgn)
-        {
-            if (find_victim_page(caller->mm, &vicpgn) < 0)
-                return -1;
+        if (find_victim_page(caller->mm, &vicpgn) == -1) {
+            perror("find_victim_page failed, maybe no page allocated\n");
+            return -1;
         }
-        
-        vicpte = caller ->mm->pgd[vicpgn];
+        vicpte = caller->mm->pgd[vicpgn];
         vicfpn = PAGING_FPN(vicpte);
-        /* idx for mswp*/
-        int i = 0;
-        struct memphy_struct* mswp = (struct memphy_struct*)caller->mswp;
-        for (i = 0; i < PAGING_MAX_MMSWP; i++)
-        {
-            if (mswp + i == caller->active_mswp)
-                break;
-        }
+
         /* Get free frame in MEMSWP */
-        if (MEMPHY_get_freefp(caller->active_mswp, &swpfpn) < 0)
-        {
-            struct memphy_struct** mswpit = caller->mswp;
-            for (i = 0; i < PAGING_MAX_MMSWP; i++)
-            {
-                struct memphy_struct* tmp_swp = (struct memphy_struct*)(mswpit);
-                if (MEMPHY_get_freefp(tmp_swp+i,&swpfpn) == 0)
-                {
-                    /* Do swap frame from MEMRAM to MEMSWP and vice versa*/ /* Copy victim frame to new swap frame*/
-                    __swap_cp_page(caller->mram, vicfpn, tmp_swp+i, swpfpn);
-                    caller->active_mswp = tmp_swp+i;
-                    break;
-                }
-            }
-            
-        }
-        else
-        
-        __swap_cp_page(caller->mram,vicfpn,caller->active_mswp,swpfpn) ;
-        /* Copy target frame from swap to vicfpn in RAM */
-        __swap_cp_page(mswp + tgtswp_type, tgtfpn, caller->mram, vicfpn);
-        /*free frame in swap that includes gtfpn which have been copy to RAM*/
-        MEMPHY_put_freefp(mswp + tgtswp_type, tgtfpn);
-        /* Update page table, set swap for idx vicpgn */
-        pte_set_swap(&caller->mm->pgd[vicpgn],i, swpfpn);
-        /* Update its ontine Status of the target page */
-        //set online frame for idx pgn with the vicpn which has move to
-        pte_set_fpn(&caller->mm->pgd[pgn], vicfpn);
-        // keep tracking
-            
-        #ifdef CPU_TLB
-                    /* Update its online status of TLB (if needed) */
-        #endif
-                
-        enlist_pgn_node(&caller->mm->fifo_pgn,pgn);
-        pte = caller ->mm->pgd[pgn];
+        MEMPHY_get_freefp(caller->active_mswp, &swpfpn);
+
+        /* Do swap frame from MEMRAM to MEMSWP and vice versa*/
+        /* Copy victim frame to swap */
+        __swap_cp_page(caller->mram, vicfpn, caller->active_mswp, swpfpn);
+        /* Copy target frame from swap to mem */
+        __swap_cp_page(caller->active_mswp, tgtfpn, caller->mram, vicfpn);
+
+        /* Update page table */
+        pte_set_swap(&mm->pgd[vicpgn], 0, swpfpn);
+
+        /* Update its online status of the target page */
+        // pte_set_fpn() & mm->pgd[pgn];
+        pte_set_fpn(&mm->pgd[pgn], vicfpn);
+
+        enlist_pgn_node(&caller->mm->fifo_pgn, pgn);
+
+        MEMPHY_put_freefp(caller->active_mswp, tgtfpn);
     }
 
     *fpn = PAGING_FPN(pte);
@@ -282,7 +251,6 @@ int pg_getval(struct mm_struct *mm, int addr, BYTE *data, struct pcb_t *caller)
 
   return 0;
 }
-
 /*pg_setval - write value to given offset
  *@mm: memory region
  *@addr: virtual address to acess 
