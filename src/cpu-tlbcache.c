@@ -30,7 +30,7 @@
  *  @value: obtained value
  */
 
-int tlb_cache_read(struct memphy_struct * mp, int pid, int pgnum, int value)
+int tlb_cache_read(struct memphy_struct * mp, int pid, int pgnum, int* value)
 {
    /* TODO: the identify info is mapped to 
     *      cache line by employing:
@@ -48,7 +48,7 @@ int tlb_cache_read(struct memphy_struct * mp, int pid, int pgnum, int value)
     }
 
     // Nếu trang chưa được cache, đọc từ bộ nhớ vật lý
-    TLBMEMPHY_read(mp, addr, value);
+    TLBMEMPHY_read(mp, addr, &value);
 
     // Cập nhật TLB cache
     mp->tlb_cache_pid = pid;
