@@ -30,7 +30,7 @@
  *  @value: obtained value
  */
 
-int tlb_cache_read(struct memphy_struct * mp, int pid, int pgnum, BYTE value)
+int tlb_cache_read(struct memphy_struct * mp, int pid, int pgnum, int value)
 {
    /* TODO: the identify info is mapped to 
     *      cache line by employing:
@@ -65,7 +65,7 @@ int tlb_cache_read(struct memphy_struct * mp, int pid, int pgnum, BYTE value)
  *  @pgnum: page number
  *  @value: obtained value
  */
-int tlb_cache_write(struct memphy_struct *mp, int pid, int pgnum, BYTE value)
+int tlb_cache_write(struct memphy_struct *mp, int pid, int pgnum, int value)
 {
    /* TODO: the identify info is mapped to 
     *      cache line by employing:
@@ -93,7 +93,7 @@ int tlb_cache_write(struct memphy_struct *mp, int pid, int pgnum, BYTE value)
  *  @addr: address
  *  @value: obtained value
  */
-int TLBMEMPHY_read(struct memphy_struct * mp, int addr, BYTE *value)
+int TLBMEMPHY_read(struct memphy_struct * mp, int addr, int *value)
 {
    if (mp == NULL)
      return -1;
@@ -111,7 +111,7 @@ int TLBMEMPHY_read(struct memphy_struct * mp, int addr, BYTE *value)
  *  @addr: address
  *  @data: written data
  */
-int TLBMEMPHY_write(struct memphy_struct * mp, int addr, BYTE data)
+int TLBMEMPHY_write(struct memphy_struct * mp, int addr, int data)
 {
    if (mp == NULL)
      return -1;
