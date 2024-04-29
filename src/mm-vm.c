@@ -220,7 +220,7 @@ int pg_getpage(struct mm_struct *mm, int pgn, int *fpn, struct pcb_t *caller)
         /* Get free frame in MEMSWP */
         if (MEMPHY_get_freefp(caller->active_mswp, &swpfpn) < 0)
         {
-            struct memphy_struct** mswpit = caller-›mswp;
+            struct memphy_struct** mswpit = caller->mswp;
             for (i = 0; i < PAGING_MAX_MMSWP; i++)
             {
                 struct memphy_struct* tmp_swp = (struct memphy_struct*)(mswpit);
