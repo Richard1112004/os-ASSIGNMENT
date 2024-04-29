@@ -44,7 +44,7 @@ int tlb_cache_read(struct memphy_struct * mp, int pid, int pgnum, int* value)
 
     // Kiểm tra xem trang đã được cache chưa
     if (mp->tlb_cache_pid == pid && mp->tlb_cache_pgnum == pgnum) {
-        value = mp->tlb_cache_value; // Trả về giá trị từ TLB cache
+        value = &mp->tlb_cache_value; // Trả về giá trị từ TLB cache
         return 0; // Đọc thành công từ TLB cache
     }
 
@@ -54,7 +54,7 @@ int tlb_cache_read(struct memphy_struct * mp, int pid, int pgnum, int* value)
     // Cập nhật TLB cache
     mp->tlb_cache_pid = pid;
     mp->tlb_cache_pgnum = pgnum;
-    mp->tlb_cache_value = value;
+    mp->tlb_cache_value = *value;
 
     return 0; // Đọc thành công từ bộ nhớ vật lý
 }
