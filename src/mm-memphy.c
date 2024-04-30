@@ -7,6 +7,8 @@
 #include "mm.h"
 #include <stdlib.h>
 #include <pthread.h>
+#include <string.h>
+#include <stdio.h>
 static pthread_mutex_t mem_lock;
 
 /*

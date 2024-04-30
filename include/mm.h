@@ -122,13 +122,13 @@ int tlb_flush_tlb_of(struct pcb_t *proc, struct memphy_struct * mp);
 int tlballoc(struct pcb_t *proc, uint32_t size, uint32_t reg_index);
 int tlbfree_data(struct pcb_t *proc, uint32_t reg_index);
 int tlbread(struct pcb_t * proc, uint32_t source, uint32_t offset, uint32_t destination) ;
-int tlbwrite(struct pcb_t * proc, BYTE data, uint32_t destination, uint32_t offset);
+int tlbwrite(struct pcb_t * proc, int data, uint32_t destination, uint32_t offset);
 int init_tlbmemphy(struct memphy_struct *mp, int max_size);
-int TLBMEMPHY_read(struct memphy_struct * mp, int addr, BYTE *value);
-int TLBMEMPHY_write(struct memphy_struct * mp, int addr, BYTE data);
+int TLBMEMPHY_read(struct memphy_struct * mp, int addr, int *value);
+int TLBMEMPHY_write(struct memphy_struct * mp, int addr, int data);
 int TLBMEMPHY_dump(struct memphy_struct * mp);
-int tlb_cache_write(struct memphy_struct* mp, int pid, int pgnum, BYTE value);
-int tlb_cache_read(struct memphy_struct* mp, int pid, int pgnum, BYTE value);
+int tlb_cache_write(struct memphy_struct* mp, int pid, int pgnum, int value);
+int tlb_cache_read(struct memphy_struct* mp, int pid, int pgnum, int* value);
 /* VM prototypes */
 int pgalloc(struct pcb_t *proc, uint32_t size, uint32_t reg_index);
 int pgfree_data(struct pcb_t *proc, uint32_t reg_index);

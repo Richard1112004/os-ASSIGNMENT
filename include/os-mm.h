@@ -76,7 +76,9 @@ struct memphy_struct {
    /* Sequential device fields */ 
    int rdmflg;
    int cursor;
-
+   int tlb_cache_pid;
+   int tlb_cache_pgnum;
+   int tlb_cache_value;
    /* Management structure */
    struct framephy_struct *free_fp_list;
    struct framephy_struct *used_fp_list;

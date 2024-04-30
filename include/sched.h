@@ -23,6 +23,9 @@ void put_proc(struct pcb_t * proc);
 /* Add a new process to ready queue */
 void add_proc(struct pcb_t * proc);
 
+/* Handle when proc is done*/
+void finish_proc(struct pcb_t ** proc);
+
 #endif
 
 
