@@ -390,21 +390,24 @@ int pgwrite(
  *@vmaid: ID vm area to alloc memory region
  *@incpgnum: number of page
  */
+// giải phóng bộ nhớ vật lý được sử dụng bởi 1 tiến trình đã bị hủy bỏ
 int free_pcb_memph(struct pcb_t *caller)
 {
   int pagenum, fpn;
   uint32_t pte;
 
-
+// tranverse page in ảo
   for(pagenum = 0; pagenum < PAGING_MAX_PGN; pagenum++)
   {
     pte= caller->mm->pgd[pagenum];
 
     if (!PAGING_PAGE_PRESENT(pte))
     {
+      // frame của bộ nhớ vật lý
       fpn = PAGING_FPN(pte);
       MEMPHY_put_freefp(caller->mram, fpn);
     } else {
+      // fram của swap
       fpn = PAGING_SWP(pte);
       MEMPHY_put_freefp(caller->active_mswp, fpn);    
     }
