@@ -21,25 +21,26 @@ int tlb_change_all_page_tables_of(struct pcb_t *proc,  struct memphy_struct * mp
   /* TODO update all page table directory info 
    *      in flush or wipe TLB (if needed)
    */
-    tlb_flush_tlb_of(proc, mp);
-    
-    // Kiểm tra xem quá trình có bảng trang không
-    if (proc->page_table != NULL) {
-        // Lặp qua tất cả các mục trong bảng trang của quá trình
-        for (int i = 0; i < (1 << FIRST_LV_LEN); i++) {
-            // Kiểm tra xem mục này có trỏ tới bảng dịch chuyển tiếp theo không
-            if (proc->page_table->table[i].next_lv != NULL) {
-                // Lặp qua tất cả các mục trong bảng dịch chuyển tiếp theo
-                for (int j = 0; j < (1 << SECOND_LV_LEN); j++) {
-                    // Cập nhật thông tin của bảng dịch chuyển tiếp theo tại mỗi mục
-                    
-                    proc->page_table->table[i].next_lv->table[j].v_index = proc->page_table->table[i].table[j].v_index;
-                    proc->page_table->table[i].next_lv->table[j].p_index = proc->page_table->table[i].table[j].p_index;
-                }
-            }
+	// Kiểm tra tính hợp lệ của tham số đầu vào
+    if (proc == NULL || mp == NULL || proc->page_table == NULL) {
+        return -1; // Trả về mã lỗi nếu tham số không hợp lệ
+    }
+
+    // Truy cập vào bảng trang của tiến trình
+    struct page_table_t *page_table = proc->page_table;
+
+    // Duyệt qua các hàng trong bảng trang cấp thứ nhất của tiến trình
+    for (int i = 0; i < page_table->size; i++) {
+        // Truy cập vào bảng dịch trang cấp thứ hai
+        struct trans_table_t *trans_table = page_table->table[i].next_lv;
+        
+        // Cập nhật thông tin bảng dịch trang cấp thứ hai
+        for (int j = 0; j < trans_table->size; j++) {
+            // Gán địa chỉ mới cho chỉ số vật lý
+            trans_table->table[j].p_index = mp->storage;
         }
     }
-    
+    tlb_flush_tlb_of(proc, mp);
     return 0;
 }
 
