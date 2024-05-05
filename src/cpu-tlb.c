@@ -21,7 +21,26 @@ int tlb_change_all_page_tables_of(struct pcb_t *proc,  struct memphy_struct * mp
   /* TODO update all page table directory info 
    *      in flush or wipe TLB (if needed)
    */
-    return tlb_flush_tlb_of(proc, mp);
+    tlb_flush_tlb_of(proc, mp);
+    
+    // Kiểm tra xem quá trình có bảng trang không
+    if (proc->page_table != NULL) {
+        // Lặp qua tất cả các mục trong bảng trang của quá trình
+        for (int i = 0; i < (1 << FIRST_LV_LEN); i++) {
+            // Kiểm tra xem mục này có trỏ tới bảng dịch chuyển tiếp theo không
+            if (proc->page_table->table[i].next_lv != NULL) {
+                // Lặp qua tất cả các mục trong bảng dịch chuyển tiếp theo
+                for (int j = 0; j < (1 << SECOND_LV_LEN); j++) {
+                    // Cập nhật thông tin của bảng dịch chuyển tiếp theo tại mỗi mục
+                    
+                    proc->page_table->table[i].next_lv->table[j].v_index = proc->page_table->table[i].table[j].v_index;
+                    proc->page_table->table[i].next_lv->table[j].p_index = proc->page_table->table[i].table[j].p_index;
+                }
+            }
+        }
+    }
+    
+    return 0;
 }
 
 int tlb_flush_tlb_of(struct pcb_t *proc, struct memphy_struct * mp)
