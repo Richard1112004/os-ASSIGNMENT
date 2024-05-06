@@ -55,16 +55,6 @@ int tlb_cache_read(struct memphy_struct * mp, int pid, int pgnum, int* value)
     TLBMEMPHY_read(mp, addr, value);
        return -1;
     }
-    // Cập nhật TLB cache
-    for (int i = 0; i < mp->maxsz; i++) {
-        if (!mp->tlb[i].valid) {
-            mp->tlb[i].pid = pid;
-            mp->tlb[i].pgnum = pgnum;
-            mp->tlb[i].value = *value;
-            mp->tlb[i].valid = 1;
-            break;
-        }
-    }
     return 0; // Đọc thành công từ bộ nhớ vật lý
 }
 
