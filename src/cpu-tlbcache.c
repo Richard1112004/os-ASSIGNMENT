@@ -40,22 +40,27 @@ int tlb_cache_read(struct memphy_struct * mp, int pid, int pgnum, int* value)
     if (mp == NULL || pgnum < 0 || pgnum >= mp->maxsz)
         return -1; // Tham số không hợp lệ hoặc mp không tồn tại
 
-    int addr = pgnum * PAGE_SIZE; // Tính địa chỉ bắt đầu của trang
-
-    // Kiểm tra xem trang đã được cache chưa
-    if (mp->tlb_cache_pid == pid && mp->tlb_cache_pgnum == pgnum) {
-        value = &mp->tlb_cache_value; // Trả về giá trị từ TLB cache
-        return 0; // Đọc thành công từ TLB cache
+    // Kiểm tra xem trang đã được cache trong TLB chưa
+    for (int i = 0; i < mp->maxsz; i++) {
+        if (mp->tlb[i].valid && mp->tlb[i].pid == pid && mp->tlb[i].pgnum == pgnum) {
+            *value = mp->tlb[i].value; // Lấy giá trị từ TLB cache
+            return 0; // Đọc thành công từ TLB cache
+        }
     }
 
     // Nếu trang chưa được cache, đọc từ bộ nhớ vật lý
+    int addr = pgnum * PAGE_SIZE; // Tính địa chỉ bắt đầu của trang
     TLBMEMPHY_read(mp, addr, value);
-
     // Cập nhật TLB cache
-    mp->tlb_cache_pid = pid;
-    mp->tlb_cache_pgnum = pgnum;
-    mp->tlb_cache_value = *value;
-
+    for (int i = 0; i < mp->maxsz; i++) {
+        if (!mp->tlb[i].valid) {
+            mp->tlb[i].pid = pid;
+            mp->tlb[i].pgnum = pgnum;
+            mp->tlb[i].value = *value;
+            mp->tlb[i].valid = true;
+            break;
+        }
+    }
     return 0; // Đọc thành công từ bộ nhớ vật lý
 }
 
@@ -81,10 +86,15 @@ int tlb_cache_write(struct memphy_struct *mp, int pid, int pgnum, int value)
     TLBMEMPHY_write(mp, addr, value);
 
     // Cập nhật TLB cache
-    mp->tlb_cache_pid = pid;
-    mp->tlb_cache_pgnum = pgnum;
-    mp->tlb_cache_value = value;
-
+    for (int i = 0; i < mp->maxsz; i++) {
+        if (!mp->tlb[i].valid) {
+            mp->tlb[i].pid = pid;
+            mp->tlb[i].pgnum = pgnum;
+            mp->tlb[i].value = value;
+            mp->tlb[i].valid = true;
+            break;
+        }
+    }
     return 0; // Ghi thành công vào bộ nhớ vật lý
 }
 
@@ -155,7 +165,10 @@ int init_tlbmemphy(struct memphy_struct *mp, int max_size)
 {
    mp->storage = (BYTE *)malloc(max_size*sizeof(BYTE));
    mp->maxsz = max_size;
-
+   mp->tlb = (tlb_entry_t *)malloc(max_size * sizeof(tlb_entry_t));
+   for (int i = 0; i < max_size; i++) {
+       mp->tlb[i].valid = false;
+   }
    mp->rdmflg = 1;
 
    return 0;
