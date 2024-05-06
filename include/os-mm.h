@@ -85,7 +85,7 @@ struct tlb_entry_t {
     int pid;        // PID của tiến trình
     int pgnum;      // Số trang
     int value;      // Giá trị ứng với địa chỉ vật lý
-    bool valid;     // Cờ chỉ ra tính hợp lệ của mục TLB
+    int valid;     // Cờ chỉ ra tính hợp lệ của mục TLB (0 là false, 1 là true)
 }
 
 #endif
