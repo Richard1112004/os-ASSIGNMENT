@@ -159,7 +159,7 @@ int init_tlbmemphy(struct memphy_struct *mp, int max_size)
 {
    mp->storage = (BYTE *)malloc(max_size*sizeof(BYTE));
    mp->maxsz = max_size;
-   mp->tlb = (tlb_entry_t *)malloc(max_size * sizeof(tlb_entry_t));
+   mp->tlb = (struct tlb_entry_t *)malloc(max_size * sizeof(struct tlb_entry_t));
    for (int i = 0; i < max_size; i++) {
        mp->tlb[i].valid = 0;
    }
