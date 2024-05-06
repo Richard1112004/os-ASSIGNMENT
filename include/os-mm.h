@@ -76,12 +76,16 @@ struct memphy_struct {
    /* Sequential device fields */ 
    int rdmflg;
    int cursor;
-   int tlb_cache_pid;
-   int tlb_cache_pgnum;
-   int tlb_cache_value;
+   struct tlb_entry_t *tlb;
    /* Management structure */
    struct framephy_struct *free_fp_list;
    struct framephy_struct *used_fp_list;
 };
+struct tlb_entry_t {
+    int pid;        // PID của tiến trình
+    int pgnum;      // Số trang
+    int value;      // Giá trị ứng với địa chỉ vật lý
+    bool valid;     // Cờ chỉ ra tính hợp lệ của mục TLB
+}
 
 #endif
