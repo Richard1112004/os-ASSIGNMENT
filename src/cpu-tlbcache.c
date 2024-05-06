@@ -39,18 +39,22 @@ int tlb_cache_read(struct memphy_struct * mp, int pid, int pgnum, int* value)
     */
     if (mp == NULL || pgnum < 0 || pgnum >= mp->maxsz)
         return -1; // Tham số không hợp lệ hoặc mp không tồn tại
-
+     int checked_tlb_read = 0;
     // Kiểm tra xem trang đã được cache trong TLB chưa
     for (int i = 0; i < mp->maxsz; i++) {
         if (mp->tlb[i].valid && mp->tlb[i].pid == pid && mp->tlb[i].pgnum == pgnum) {
             *value = mp->tlb[i].value; // Lấy giá trị từ TLB cache
-            return 0; // Đọc thành công từ TLB cache
+            checked_tlb_read = 1;
+           break;
         }
     }
 
     // Nếu trang chưa được cache, đọc từ bộ nhớ vật lý
     int addr = pgnum * PAGE_SIZE; // Tính địa chỉ bắt đầu của trang
+    if (!checked_tlb_read){
     TLBMEMPHY_read(mp, addr, value);
+       return -1;
+    }
     // Cập nhật TLB cache
     for (int i = 0; i < mp->maxsz; i++) {
         if (!mp->tlb[i].valid) {
