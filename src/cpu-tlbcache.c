@@ -57,7 +57,7 @@ int tlb_cache_read(struct memphy_struct * mp, int pid, int pgnum, int* value)
             mp->tlb[i].pid = pid;
             mp->tlb[i].pgnum = pgnum;
             mp->tlb[i].value = *value;
-            mp->tlb[i].valid = true;
+            mp->tlb[i].valid = 1;
             break;
         }
     }
@@ -91,7 +91,7 @@ int tlb_cache_write(struct memphy_struct *mp, int pid, int pgnum, int value)
             mp->tlb[i].pid = pid;
             mp->tlb[i].pgnum = pgnum;
             mp->tlb[i].value = value;
-            mp->tlb[i].valid = true;
+            mp->tlb[i].valid = 1;
             break;
         }
     }
@@ -167,7 +167,7 @@ int init_tlbmemphy(struct memphy_struct *mp, int max_size)
    mp->maxsz = max_size;
    mp->tlb = (tlb_entry_t *)malloc(max_size * sizeof(tlb_entry_t));
    for (int i = 0; i < max_size; i++) {
-       mp->tlb[i].valid = false;
+       mp->tlb[i].valid = 0;
    }
    mp->rdmflg = 1;
 
