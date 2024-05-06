@@ -49,7 +49,10 @@ int tlb_flush_tlb_of(struct pcb_t *proc, struct memphy_struct * mp)
   // Lặp qua tất cả các trang trong cache TLB
     for (int i = 0; i < mp->maxsz; i++) {
         // Đặt các giá trị của mỗi trang về trạng thái mặc định
-        mp->storage[i] = -1; // Hoặc giá trị mặc định phù hợp với loại dữ liệu
+        mp->tlb[i].pid = -1;
+        mp->tlb[i].pgnum = -1;
+        mp->tlb[i].value = -1;
+        mp->tlb[i].valid = 0;
     }
     return 0;
 }
